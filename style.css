@@ -1,0 +1,17 @@
+html, body, main {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+main{
+  display:flex;
+  justify-content: center;
+  align-items: center;
+
+}
+
+canvas {
+  display: block;
+  cursor: none;
+}

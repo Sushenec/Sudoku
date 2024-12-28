@@ -173,7 +173,8 @@ async function keyPressed(){
       let unsolved = getSudokuFromGrid();
       await solveSudoku(unsolved).then((solved)=>putSudokuInGrid(solved));
       break;
-    case "Shift":
+    case "Alt":
+    case "AltGraph":
       grid.deleteAllData();
       break;
     case "Control":
@@ -186,6 +187,22 @@ async function keyPressed(){
 }
 
 async function solveSudoku(sudoku){
+  // precheck sudoku for user error before solving
+  if(!checkSudoku(sudoku)){
+    let errorSudoku = [ ["E","R","R","O","R","","","",""],
+                        ["","","","","","","","",""],
+                        ["w","r","o","n","g","","","",""],
+                        ["i","n","p","u","t","","","",""],
+                        ["","","","","","","","",""],
+                        ["p","r","e","s","s","","","",""],
+                        ["a","l","t","","","","","",""],
+                        ["","","","","","","","",""],
+                        ["","","","","","","","",""]];
+
+    return errorSudoku;
+  }
+
+  // sends the problem to php
   const response = await fetch("solve.php",{
     method: "POST",
     headers: {"Content-Type": "application/json"},
@@ -223,8 +240,57 @@ function getSudokuFromGrid(){
 
   for (let index = 0; index < grid.boxGrid.length; index++) {
     const box = grid.boxGrid[index];
-    sudoku[box.id[0]][box.id[1]] = box.data == ""? 0 : box.data;
+    sudoku[box.id[0]][box.id[1]] = box.data > 0 ? box.data : 0;
   }
 
   return sudoku;
+}
+
+// checks if sudoku board has illegal configurations
+function checkSudoku(sudoku){
+  function checkForDuplicatesArray(arr){
+    let seenValues = [];
+    for (let index = 0; index < arr.length; index++) {
+      const element = arr[index];
+      if(seenValues.indexOf(element) != -1 && element != 0){
+        return true;
+      }
+      seenValues.push(element);
+    }
+    return false;
+  }
+
+  // check for duplicates in rows and columns
+  for (let i = 0; i < sudoku.length; i++) {
+    let row = [];
+    let column = [];
+    for (let j = 0; j < sudoku.length; j++) {
+      row.push(sudoku[i][j]);
+      column.push(sudoku[j][i]);
+    }
+    if(checkForDuplicatesArray(row) || checkForDuplicatesArray(column)){
+      return false;
+    }
+  }
+
+  // check for subsquares
+  let subsquares = [[[],[],[]],
+                    [[],[],[]],
+                    [[],[],[]]];
+
+  for (let row = 0; row < sudoku.length; row++) {
+    for (let column = 0; column < sudoku.length; column++) {
+      subsquares[Math.trunc(row/3)][Math.trunc(column/3)].push(sudoku[row][column]);
+    }
+  }
+  
+  for (let row = 0; row < subsquares.length; row++) {
+    for (let column = 0; column < subsquares.length; column++) {
+      if(checkForDuplicatesArray(subsquares[row][column])){
+        return false;
+      }
+    }
+  }
+
+  return true;
 }

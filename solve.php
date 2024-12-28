@@ -11,7 +11,7 @@ header("Content-Type: application/json");
 echo json_encode(["sudoku" => $sudoku]);
 
 function canPlace($number, $row, $column, $sudoku){
-    for ($n=1; $n < 9; $n++) { 
+    for ($n=0; $n < 9; $n++) { 
         if($sudoku[$row][$n] == $number  || $sudoku[$n][$column] == $number){
             return false;
         }    
